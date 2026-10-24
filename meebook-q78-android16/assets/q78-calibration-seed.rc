@@ -1,0 +1,7 @@
+# Q78: seed the known-working binary input calibration before input services load.
+# Proven on the Q78 Android 16 LineageOS 23.2 GSI.
+on post-fs-data
+    copy /system/etc/q78-input-manager-state.abx /data/system/input-manager-state.xml
+    chown system system /data/system/input-manager-state.xml
+    chmod 0600 /data/system/input-manager-state.xml
+    restorecon /data/system/input-manager-state.xml
