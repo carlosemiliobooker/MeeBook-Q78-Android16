@@ -5,10 +5,30 @@
 **Status:** The Q78 was successfully flashed on **2026-10-24**. The permanently installed Android 16 boots, E Ink rendering works, and touchscreen input is accurate. The active installation uses `system_a` and preserves the modified Rockchip E Ink `vendor_a` partition.
 
 > [!WARNING]
-> **Flashing is destructive and can brick your reader.** Unlocking the bootloader and `fastboot -w` erase userdata. The successful test device did **not** have a fully verified backup/low-level unbrick path before the final flash. A/B slot `b` had empty logical partitions, so switching slots is **not** a fallback. Make your own backups and verify recovery **before** using this guide. You accept the risk.
+> **Flashing is destructive and can brick your reader.** This guide applies **only to a Q78 whose bootloader is already unlocked**; it does **not** provide any bootloader-unlocking procedure. `fastboot -w` erases userdata. **No complete, verified backup or tested rollback/unbrick procedure was obtained during this project** despite attempts to make backups. The Rockchip USB readback was unusable beyond approximately 32 MiB, and later ADB backup attempts did not yield verified images. Slot `b` had empty logical partitions, so switching slots is **not** a fallback. Proceeding without a reliable restore path carries a real risk of permanent device loss.
+
+> [!NOTE]
+> **Reproducibility boundary:** This repository includes the proven Android 16 system-flashing procedure and files needed to prepare its touchscreen calibration. It **does not include a fully reproducible stock Android 11 → compatible E Ink vendor build**. The historical patched vendor image is an external, owner-supplied prerequisite: `vendor_android12_patched.img`, SHA-256 `fa468f4ff1767aecfabb51e4148c7edb0f1aae978b1cc32735382e5c0d029d06`. Its original source/build recipe was not recovered despite inspecting local files and shell history. Do not attempt the permanent installation on an unmodified stock-vendor Q78 based on this README alone. See [scope and limitations](docs/PROJECT_SCOPE.md).
 
 > [!IMPORTANT]
 > **What “root” means here:** We used **rooted USB ADB on an Android 12 staging GSI** (`adb root`, `id -u` → `0`). We **did not** establish Magisk, `su`, or rooted ADB on the final Android 16 OS. The unofficial Android 16 GSI has **no built-in root**. This is not a tested Magisk rooting tutorial or a from-stock bootloader-unlocking tutorial.
+
+## Installation roadmap: stock Android 11 → Android 16
+
+| Stage | Documentation | Status |
+| --- | --- | --- |
+| 1. Check original Q78 and bootloader status | [Android 11 → Android 12 guide](docs/ANDROID11_TO_ANDROID12.md#1-install-tools-on-your-mac-and-confirm-hardware) | Verified on a device already showing unlocked bootloader; **no unlock procedure recorded** |
+| 2. Install temporary Phh Android 12 via DSU | [Android 11 → Android 12 guide](docs/ANDROID11_TO_ANDROID12.md#3-download-android-12-v416-and-dsu-sideloader-203) | Installed; Android 12 identified via ADB; original UI did not boot fully |
+| 3. Obtain rooted USB ADB in Android 12 DSU | [Android 11 → Android 12 guide](docs/ANDROID11_TO_ANDROID12.md#5-verify-android-12-identity-and-rooted-adb) | **Confirmed UID 0** |
+| 4. Make Rockchip E Ink vendor work; permanently install Android 12 | [Recorded evidence and gaps](docs/ANDROID11_TO_ANDROID12.md#7-the-later-permanent-android-12-milestone--partially-evidenced) | **Working A12 later confirmed; system/vendor image paths, checks, resize/flash sequence, and wipe/reboot now recovered; original output and vendor build still missing** |
+| 5. Build touchscreen-calibrated Android 16 | [§5–6 below](#5-provision-the-calibration-no-trial-and-error-procedures) | Known-good image tested in DSU |
+| 6. Permanently flash Android 16 in fastbootd | [§7–10 below](#8-permanent-flash-exact-operations-that-worked) | **Successfully completed on October 24, 2026** |
+
+**Flash-history recovery (2026-10-24):** The original Mac Terminal history contains the Android 12 `resize-logical-partition system_a 1309229056`, `resize-logical-partition vendor_a 335544320`, `fastboot -S 16M flash vendor_a "$VENDOR"`, and `fastboot -S 16M flash system_a "$SYSTEM"` sequence. The original flash script defines `SYSTEM="$BASE/android12.img"` and `VENDOR="$BASE/flash-staging/vendor_android12_patched.img"`, checks both image sizes, and verifies both partitions are logical. The following shell history records `fastboot -w` and `fastboot reboot`. See [the recovered complete flash block and evidence limitations](docs/ANDROID12_FLASH_HISTORY.md). History still does **not** preserve flash `OKAY` output.
+
+**Vendor evidence update (2026-10-24):** A read-only comparison of three saved vendor files found that [`vendor_android12_patched.img`](docs/VENDOR_IMAGE_VERIFICATION.md) (335,544,320 bytes, SHA-256 `fa468f4ff1767aecfabb51e4148c7edb0f1aae978b1cc32735382e5c0d029d06`) contains the exact saved ARM32 `libheif.so` compatibility shim, Skia, and verified graphics SELinux labels. **This is the strongest compatible vendor candidate, not yet a proven match to the live `vendor_a` partition.** Its proprietary binaries are not bundled.
+
+**Evidence update (2026-10-24):** The recovered Android 11/12 chat documents the DSU and rooted-ADB preparation. Follow-up [research findings](docs/RESEARCH_FINDINGS.md) explain the missing proprietary/custom vendor build, historical Rockchip USB readback limitations, and how to locate relevant artifacts on the original Mac. The final local inventory and source searches did not find the original vendor-building script. **The full from-stock installation remains incomplete and factory-locked devices are outside this guide’s scope.** We recovered the original Android 12 `system_a`/`vendor_a` resize-and-flash commands, image paths, and wipe/reboot commands, but not the flash stdout or complete vendor-build recipe. No verified backup or stock restoration was completed.
 
 ## 1. Compatibility and prerequisites
 
@@ -26,7 +46,7 @@ This exact installation is **not a generic RK3566 guide**. It applies to the fol
 | Host | macOS Terminal with Android Platform Tools and Homebrew e2fsprogs |
 | Required existing hardware stack | **Modified, known-good Q78 vendor partition containing Rockchip E Ink libraries** |
 
-**Critical limitation for factory-stock readers:** The steps used to unlock the specific bootloader and to create the working modified E Ink vendor image from stock firmware are **not fully preserved in the available project record**. The successful installation started from an unlocked device with the known-good vendor stack **already installed** and a working Android 12 GSI. Do **not** assume a stock Android 11 `vendor` is an equivalent substitute. This guide does not invent that missing procedure.
+**Already-unlocked devices only:** The historical Android 11 → Android 12 transcript is included in [docs/ANDROID11_TO_ANDROID12.md](docs/ANDROID11_TO_ANDROID12.md). This Q78 **already reported unlocked** before our work. We do not provide an unlock procedure, and factory-locked devices are **not supported by this guide**. Android 12 via DSU enabled `adb root`, but the early transcript ended **before** graphical boot. The later successful permanent installation depended on a **known-good, modified E Ink vendor** and working Android 12. The complete vendor build procedure and Android 12 flash stdout are not preserved. A stock Android 11 vendor must not be assumed to work on Android 16.
 
 ### The working vendor stack must be preserved
 
@@ -39,6 +59,8 @@ The successful Q78 configuration included proprietary components such as:
 Android 11 libskia.so
 custom 32-bit ARM libheif.so shim
 ```
+
+The owner recovered an exact-hash-matched [patched Android 12 vendor-image candidate](docs/VENDOR_IMAGE_VERIFICATION.md), including the 1,632-byte ARM32 HEIF shim. The image itself is not part of this repository.
 
 Correct SELinux file labels also mattered (including `same_process_hal_file` on the relevant Mali and mapper files). These proprietary and custom binaries are **not** included in this public repository. The working project's local vendor materials were at:
 
@@ -57,7 +79,7 @@ The tested Android 16 flash **did not change `vendor_a`**.
 | Homebrew `e2fsprogs` (`debugfs`, `e2fsck`) | `brew install e2fsprogs` | Only needed to build a customized system image |
 | `lineage-23.2-20260620-a64-bvN.tar.xz` | [A64 GSI release](https://github.com/Lost-Entrepreneur439/LineageOS-a64_gsi/releases/tag/2026-06-20) | **Correct ARM32/Binder64 A/B vanilla image**; do not use `arm64` |
 | `system-squeak-arm32_binder64-ab-vanilla.img.xz` | [Phh Treble v416](https://github.com/phhusson/treble_experimentations/releases/tag/v416) | Android 12 staging image, needed only if establishing that baseline |
-| Working Q78 modified `vendor_a` | **Extract/prepare from your own device** | Critical; not distributed here |
+| Working Q78 modified `vendor_a` | **Owner-supplied previously patched image; build recipe unavailable** | Critical; not distributed here |
 | `assets/q78-input-manager-state.abx` | **Included here** | 322-byte Android Binary XML calibration |
 | `assets/q78-input-manager-state.xml` | **Included here** | Human-readable calibration source |
 | `assets/q78-calibration-seed.rc` | **Included here** | Boot-time install of calibration |
@@ -65,7 +87,7 @@ The tested Android 16 flash **did not change `vendor_a`**.
 | `scripts/prepare-image.sh` | **Included here** | Injects both assets into a copy of ext4 Android 16 |
 | `scripts/check-fastbootd.sh` | **Included here** | Read-only checks before flashing |
 
-This repository intentionally does **not** embed 450 MB–1.9 GB operating-system images or private vendor dumps. Download the public image from its original publisher and keep any proprietary files extracted from your own hardware private. See [FILES.md](FILES.md) for integrity information.
+This repository intentionally does **not** embed 450 MB–1.9 GB operating-system images or private vendor dumps. Download the public image from its original publisher and keep any proprietary files extracted from your own hardware private. See [FILES.md](FILES.md) for integrity information and [PROJECT_SCOPE.md](docs/PROJECT_SCOPE.md) for the precise limits of reproducibility.
 
 ## 3. Prepare macOS
 
@@ -88,7 +110,7 @@ Download the specific **A64** Android 16 release archive linked in §2 to `$BASE
 
 ## 4. Get rooted ADB on the Android 12 staging OS
 
-**This section begins with the proven Phh Android 12.1 v416 system already booting and a working Rockchip vendor stack.** Do not flash the A12 image or modify `vendor_a` blindly on a factory reader.
+**For the tested stock Android 11 → Android 12 DSU/root sequence**, follow [this newly added chapter](docs/ANDROID11_TO_ANDROID12.md). **This section below applies to the later, proven working Phh Android 12.1 v416 system with the compatible vendor stack already installed.** Do not flash the A12 image or modify `vendor_a` blindly on a factory reader.
 
 On the Q78, enable Developer Options and USB debugging. Connect by USB and authorize the Mac. Then:
 
@@ -110,7 +132,7 @@ system_a: 1,309,229,056 bytes (historical Android 12 allocation)
 vendor_a:   335,544,320 bytes
 ```
 
-Those are **recorded results**, not universal flash settings. A from-stock Android 12 installer is outside the verified steps in this guide. Never overwrite a working Q78 vendor partition with a generic vendor image.
+Those are **recorded results**, not universal flash settings. The [documented from-stock staging steps](docs/ANDROID11_TO_ANDROID12.md) stop at an Android 12 DSU with root ADB but nonfunctional UI; full permanent Android 12 installation instructions remain incomplete. Never overwrite a working Q78 vendor partition with a generic vendor image.
 
 ## 5. Provision the calibration (no trial-and-error procedures)
 
@@ -203,7 +225,7 @@ The script performs the same **necessary system-image changes** as the successfu
 
 The `init` rule runs during `post-fs-data`, copies the ABX file into `/data/system/input-manager-state.xml`, assigns owner `system:system`, applies `0600`, and restores the SELinux context. The script writes the files into a **copy** of the ext4 GSI using `debugfs`, labels them `u:object_r:system_file:s0`, reads both files back, runs a read-only filesystem check, and writes a SHA-256 sidecar. This builder is supplied as a reproducibility aid, not falsely represented as having undergone the original on-device test.
 
-**Required output image size:** `1880514560` bytes. The **known-good file** was confirmed this size and its two release files passed local `SHA256SUMS.txt` verification before permanent flashing.
+**Required output image size:** `1880514560` bytes. The **known-good file** was confirmed this size and its raw and compressed variants passed local `SHA256SUMS.txt` verification before permanent flashing.
 
 For a newly built image, **test it in DSU before permanent flashing**. The actual successful project used the stock DSU installer and a gzip of the prepared raw ext4 image:
 
@@ -231,7 +253,7 @@ While rooted Android 12 is still running, save the actual layout for **your** de
 "$ADB" -d shell lpdump > "$HOME/Q78-GSI/lpdump-before-flash.txt"
 ```
 
-Compare your physical `super`, group maximum, currently allocated extents, and logical partition names with the figures above. **Do not apply this resize if your layout lacks the space**; this guide supplies no untested instructions for deleting other partitions. Ideally create and verify backups of boot, dtbo, vbmeta, vendor, and super with an established recovery method before proceeding.
+Compare your physical `super`, group maximum, currently allocated extents, and logical partition names with the figures above. **Do not apply this resize if your layout lacks the space**; this guide supplies no untested instructions for deleting other partitions. **We did not obtain verified partition backups or establish a recovery method.** This is a disclosure of a serious risk, not a claim that a working backup procedure exists.
 
 ## 8. Permanent flash: exact operations that worked
 
@@ -379,7 +401,7 @@ On the device, without relying on Android 16 ADB root:
 - **Android 16 GSI:** does not include root; modifying `/system/build.prop` to say `ro.debuggable=1` did not demonstrate runtime rooted debugging in DSU.
 - **No Magisk boot-image patching is included:** its success, AVB behavior, and rollback for this Q78 were not tested; guessing at a `boot_a` patch could break the working E Ink installation.
 - **Calibration persistence:** The final image seeds `input-manager-state.xml` during each boot. It worked in permanent Android 16, but overwriting the entire input-manager state may replace other input preferences. Improving that behavior is a separate, future enhancement—not required to reproduce the successful flash.
-- **Rollback:** No verified, complete Android 12 backup/unbrick path was produced during the original session. Keep the working modified vendor materials, Android 12 GSI, device firmware, and any images you generate. Do not relock the bootloader with a modified system installed.
+- **Backups and rollback:** No verified partition backup or full recovery procedure was completed. Backup attempts were unsuccessful; in particular, the Rockchip USB dump was unreliable. The preserved vendor and GSI build files are *not* a device-level backup. No rollback or unbrick commands are offered. Do not relock the bootloader with a modified system installed.
 
 ## References and credits
 
@@ -392,6 +414,3 @@ On the device, without relying on Android 16 ADB root:
 - [e2fsprogs debugfs documentation](https://android.googlesource.com/platform/external/e2fsprogs/+/62fe2f4df048d439f73d7442bb318db7d3a4882a/debugfs/debugfs.8.in) — offline ext4 writes, xattrs, and verification.
 
 **Credits:** LineageOS, TrebleDroid, the A64 GSI maintainer and contributors, Phh's Treble work, and the original MeeBook Q78 hardware experiment/testing. All trademarks and third-party files remain with their respective owners.
-
-
-testing
