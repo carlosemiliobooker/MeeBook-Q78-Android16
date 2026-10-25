@@ -1,0 +1,2 @@
+# Preserve Android Binary XML byte-for-byte.
+*.abx -text

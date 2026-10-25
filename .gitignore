@@ -1,0 +1,30 @@
+# Flash/dump artifacts and proprietary images
+*.img
+*.img.xz
+*.img.gz
+*.tar.xz
+*.bin
+*.zip
+*.sha256
+images/
+backups/
+known-good/
+userdata/
+secrets/
+# Credentials and private signing materials
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.jks
+*.keystore
+# Local workstation noise
+.DS_Store
+__pycache__/
+*.pyc
+*.log
+
+# Evidence reports produced locally
+q78-evidence-inventory.csv
+*evidence-inventory*.csv
