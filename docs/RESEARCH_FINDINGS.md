@@ -1,3 +1,5 @@
+> **Root-status correction (owner-confirmed):** The Q78 with permanently installed Android 16 is rooted. This historical report does not document how it was rooted. Earlier DSU debugging observations should not be read as denying the final root status.
+
 > **Historical research snapshot.** Later local file searches recovered the compiled HEIF shim, a matching patched vendor-image candidate and the Android 12 flash command block. The original shim source/build script was **not found**. For the final state, see [PROJECT_SCOPE.md](PROJECT_SCOPE.md) and [VENDOR_IMAGE_VERIFICATION.md](VENDOR_IMAGE_VERIFICATION.md). This research document is retained for provenance, not as current action items.
 
 # MeeBook Q78: missing installation steps — evidence and recovery dossier

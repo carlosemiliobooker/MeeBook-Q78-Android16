@@ -1,6 +1,6 @@
 # Project scope and reproducibility status
 
-This repository documents the successful **MeeBook Q78 RK3566 → permanently installed LineageOS 23.2 / Android 16** result from October 24, 2026. On the tested tablet, Android 16 booted, Rockchip E Ink graphics worked, and touch input was accurate. It also documents the earlier Android 11 → Android 12 DSU/rooted-ADB work and recovered Android 12 permanent flash history.
+This repository documents the successful **MeeBook Q78 RK3566 → permanently installed LineageOS 23.2 / Android 16** result from October 24, 2026. On the tested tablet, Android 16 booted, Rockchip E Ink graphics worked, and touch input was accurate. The owner also confirms that the final permanent Android 16 installation is rooted; the root method and verification output were not preserved in the project record. It also documents the earlier Android 11 → Android 12 DSU/rooted-ADB work and recovered Android 12 permanent flash history.
 
 ## Supported starting point
 
@@ -21,7 +21,7 @@ The custom `libheif.so` ELF was recovered and matched byte-for-byte to the file 
 ## Explicitly not included
 
 - **Bootloader unlocking.** The tested device was already unlocked; no unlock transaction was performed or logged. Locked devices are outside scope.
-- **Magisk/rooting stock Android or permanent Android 16.** The confirmed `root` refers to USB ADB on Android 12 (`uid=0`).
+- **Reproducible root installation instructions.** Android 12 rooted ADB (`uid=0`) is documented, and the owner confirms root on the permanent Android 16 tablet. However, the Android 16 root implementation and commands used to obtain it are not documented. This guide does not claim to root another device by flashing its system image alone.
 - **Complete verified backups or unbricking.** Backup attempts did not yield verified images. The Rockchip Loader USB readback beyond approximately 32 MiB was invalid. No complete tested recovery path exists.
 - **A fully reproducible stock Android 11 → patched vendor build.** The complete build process and permissions/ABI validation for a new stock unit are unavailable.
 - **Android 16 touchscreen troubleshooting experiments.** Only the final successful calibration-seed configuration is supplied.

@@ -11,7 +11,7 @@
 > **Reproducibility boundary:** This repository includes the proven Android 16 system-flashing procedure and files needed to prepare its touchscreen calibration. It **does not include a fully reproducible stock Android 11 → compatible E Ink vendor build**. The historical patched vendor image is an external, owner-supplied prerequisite: `vendor_android12_patched.img`, SHA-256 `fa468f4ff1767aecfabb51e4148c7edb0f1aae978b1cc32735382e5c0d029d06`. Its original source/build recipe was not recovered despite inspecting local files and shell history. Do not attempt the permanent installation on an unmodified stock-vendor Q78 based on this README alone. See [scope and limitations](docs/PROJECT_SCOPE.md).
 
 > [!IMPORTANT]
-> **What “root” means here:** We used **rooted USB ADB on an Android 12 staging GSI** (`adb root`, `id -u` → `0`). We **did not** establish Magisk, `su`, or rooted ADB on the final Android 16 OS. The unofficial Android 16 GSI has **no built-in root**. This is not a tested Magisk rooting tutorial or a from-stock bootloader-unlocking tutorial.
+> **Root status (owner confirmation):** The final, permanently installed **Android 16 tablet is rooted**, as confirmed by its owner after the initial guide was published. The earlier **Android 12 staging GSI also had rooted USB ADB** (`adb root`, `id -u` → `0`). **The method enabling root on the final Android 16 device, its verification command/output, and whether it is reproducible from the GSI alone were not preserved.** This guide therefore documents the rooted end state but does **not** claim to teach Magisk, `su` installation, or a guaranteed root procedure. It does not provide bootloader-unlocking instructions.
 
 ## Installation roadmap: stock Android 11 → Android 16
 
@@ -201,7 +201,7 @@ It was created from this intermediate, verified base image:
 SHA256: 6cce1bb35958ba62b2d5a556f0838fbee04a34276be8c3b688fe506c86ba501c
 ```
 
-That intermediate file differs from the upstream image by a `ro.debuggable` one-byte build-property change. **It did not establish working root on Android 16** and is not needed to encode touchscreen calibration, but the final system used this specific intermediate. If you possess the tested, calibration-seeded final image, use it directly and skip the rebuild.
+That intermediate file differs from the upstream image by a `ro.debuggable` one-byte build-property change. **The DSU testing did not establish root via that change; the owner subsequently confirmed that the permanently installed Android 16 tablet is rooted, but the enabling method was not recorded.** The property edit is not needed to encode touchscreen calibration, but the final system used this specific intermediate. If you possess the tested, calibration-seeded final image, use it directly and skip the rebuild.
 
 ### C. Rebuild an image from the public upstream release
 
@@ -385,7 +385,7 @@ On the documented device, the user confirmed **“works good”** after the perm
 
 ## 10. Validate the installed result
 
-On the device, without relying on Android 16 ADB root:
+On the device (these checks do not require ADB root):
 
 1. Confirm **Android 16 / LineageOS 23.2** boots normally from internal storage (not DSU).
 2. Confirm E Ink screen draws setup and menus.
@@ -398,14 +398,17 @@ On the device, without relying on Android 16 ADB root:
 ## 11. Root status and limitations
 
 - **Android 12 staging:** USB `adb root` worked, with UID `0`.
-- **Android 16 GSI:** does not include root; modifying `/system/build.prop` to say `ro.debuggable=1` did not demonstrate runtime rooted debugging in DSU.
-- **No Magisk boot-image patching is included:** its success, AVB behavior, and rollback for this Q78 were not tested; guessing at a `boot_a` patch could break the working E Ink installation.
+- **Permanent Android 16:** the owner confirms that the running tablet **is rooted**. The root implementation (Magisk, `su`, rooted ADB, or another mechanism) and its verification output have **not** yet been documented.
+- **DSU debugging evidence:** editing `/system/build.prop` to set `ro.debuggable=1` did **not** establish root during the earlier Android 16 DSU session. That observation is not evidence that the later permanent installation is unrooted.
+- **Reproducibility limitation:** this repo does **not** include a tested step-by-step method for obtaining Android 16 root. Do not assume that flashing the supplied/calibration-seeded GSI automatically confers root; do not patch `boot_a` or `vbmeta_a` using guessed commands.
+**Optional root evidence for future contributors:** if USB ADB is enabled on the already-rooted Android 16 tablet, `adb -d shell id` shows the ordinary shell identity; `adb -d shell su -c id` can demonstrate `su`-based root **if that interface exists**. An `adb -d root` command can test root-capable adbd separately. These are **verification tests, not rooting commands**, and failure of one method does not prove all forms of root are absent.
+
 - **Calibration persistence:** The final image seeds `input-manager-state.xml` during each boot. It worked in permanent Android 16, but overwriting the entire input-manager state may replace other input preferences. Improving that behavior is a separate, future enhancement—not required to reproduce the successful flash.
 - **Backups and rollback:** No verified partition backup or full recovery procedure was completed. Backup attempts were unsuccessful; in particular, the Rockchip USB dump was unreliable. The preserved vendor and GSI build files are *not* a device-level backup. No rollback or unbrick commands are offered. Do not relock the bootloader with a modified system installed.
 
 ## References and credits
 
-- [Lost-Entrepreneur439's A64 LineageOS 23.2 GSI (2026-06-20)](https://github.com/Lost-Entrepreneur439/LineageOS-a64_gsi/releases/tag/2026-06-20) — unofficial third-party build, initial A64/arm32_binder64 release; no root included.
+- [Lost-Entrepreneur439's A64 LineageOS 23.2 GSI (2026-06-20)](https://github.com/Lost-Entrepreneur439/LineageOS-a64_gsi/releases/tag/2026-06-20) — unofficial third-party A64/arm32_binder64 build; how root was enabled on the final Q78 is not documented here.
 - [Phh Treble AOSP v416](https://github.com/phhusson/treble_experimentations/releases/tag/v416) — Android 12 staging GSI.
 - [AOSP: fastbootd](https://source.android.com/docs/core/architecture/bootloader/fastbootd) — userspace fastboot and logical partition resizing.
 - [AOSP: GSI flashing](https://source.android.com/docs/core/tests/vts/gsi) — GSI prerequisites, data wipe, and verified-boot considerations.
